@@ -77,10 +77,10 @@ WSGI_APPLICATION = 'HRM_system.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME':'hrm_system_smyz',
-        'USER':'hrm_system_smyz_user',
-        'PASSWORD':'5eKeIxkg8vauLvtwIu1IwLG4Tv1V5xKW',
-        'HOST':'dpg-cv9lmn3tq21c73blp5kg-a',
+        'NAME':'hrm_system_77i4',
+        'USER':'hrm_system_77i4_user',
+        'PASSWORD':'IpqSllQ2pBgrU47JmmQyQU4C7s24gPg7',
+        'HOST':'dpg-cv9lqdvnoe9s73c4r070-a',
         'PORT':'5432',
     }
 }
