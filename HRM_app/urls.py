@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import view_departments, add_department, update_department, toggle_department_status,custom_login, custom_logout,add_role, view_roles,update_role,toggle_roles_status,dashboard,add_employee,update_employee,delete_employee,permission_denied
+from .views import view_departments, add_department, update_department, toggle_department_status,custom_login, custom_logout,add_role, view_roles,update_role,toggle_roles_status,dashboard,add_employee,update_employee,delete_employee,permission_denied,forgot_password,verify_otp,reset_password
 
 urlpatterns = [
     path('', view_departments, name='view_departments'),  # Non-admin view
@@ -17,4 +17,7 @@ urlpatterns = [
     path('update_emp/<int:emp_id>/', update_employee, name='update_employee'),
     path('delete_emp/<int:emp_id>/', delete_employee, name='delete_employee'),
     path('permission-denied/', permission_denied, name='permission_denied'),
+    path('forgot-password/', forgot_password, name='forgot_password'),
+    path('verify-otp/', verify_otp, name='verify_otp'),
+    path('reset-password/', reset_password, name='reset_password'),
 ]

@@ -3,6 +3,10 @@ from django.contrib.auth.decorators import user_passes_test, login_required
 from .models import Department , Roles , User
 from .forms import DepartmentForm , RoleForm , EmployeeForm
 from django.contrib.auth import authenticate, login , logout
+from django.core.mail import send_mail
+from django.conf import settings
+import random
+import string
 
 def is_admin(user):
     return user.is_superuser  
@@ -50,15 +54,14 @@ def toggle_department_status(request, dept_id):
 
 def custom_login(request):
     if request.method == "POST":
-        username = request.POST["username"]
-        password = request.POST["password"]
+        username = request.POST.get("username")
+        password = request.POST.get("password")
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            # Redirect based on user type
-            if user.is_superuser or (hasattr(user, 'role') and user.role and user.role.role_name.lower() == 'hr'):
+            if is_hr_or_admin(user):
                 return redirect('dashboard')
-            return redirect('view_departments')  # Default for non-admin/non-HR users
+            return redirect('view_departments')
         else:
             return render(request, "login.html", {"error": "Invalid username or password"})
     return render(request, "login.html")
@@ -166,3 +169,58 @@ def delete_employee(request, emp_id):
         employee.delete()  # Hard delete: removes the employee from the database
         return redirect('dashboard')
     return render(request, 'delete_employee.html', {'employee': employee})
+
+
+
+
+def forgot_password(request):
+    if request.method == "POST":
+        email = request.POST.get("email")
+        try:
+            user = User.objects.get(email=email)
+            # Generate a 6-digit OTP
+            otp = ''.join(random.choices(string.digits, k=6))
+            # Store OTP in session
+            request.session['reset_otp'] = otp
+            request.session['reset_email'] = email
+            # Send OTP email
+            send_mail(
+                subject='HRM System Password Reset OTP',
+                message=f'Your OTP for password reset is: {otp}. It is valid for 10 minutes.',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                fail_silently=False,
+            )
+            return redirect('verify_otp')
+        except User.DoesNotExist:
+            return render(request, "forgot_password.html", {"error": "Email not registered."})
+    return render(request, "forgot_password.html")
+
+def verify_otp(request):
+    if request.method == "POST":
+        entered_otp = request.POST.get("otp")
+        stored_otp = request.session.get('reset_otp')
+        if entered_otp == stored_otp:
+            return redirect('reset_password')
+        else:
+            return render(request, "verify_otp.html", {"error": "Invalid OTP. Please try again."})
+    return render(request, "verify_otp.html")
+
+def reset_password(request):
+    if 'reset_email' not in request.session:
+        return redirect('forgot_password')  # Prevent direct access
+    if request.method == "POST":
+        new_password = request.POST.get("new_password")
+        confirm_password = request.POST.get("confirm_password")
+        if new_password == confirm_password:
+            email = request.session.get('reset_email')
+            user = User.objects.get(email=email)
+            user.set_password(new_password)
+            user.save()
+            # Clear session data
+            del request.session['reset_otp']
+            del request.session['reset_email']
+            return redirect('login')
+        else:
+            return render(request, "reset_password.html", {"error": "Passwords do not match."})
+    return render(request, "reset_password.html")
